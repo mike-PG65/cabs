@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react"; // for close icon
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../redux/authSlice";
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,21 +17,23 @@ const AuthForm = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
+  const dispatch = useDispatch()
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccess("");
     setError("");
 
-     // ✅ Frontend validation
-  if (!email || !password || (!isLogin && (!fullName || !confirmPassword))) {
-    setError("⚠️ Please fill in all required fields.");
-    return;
-  }
+    // ✅ Frontend validation
+    if (!email || !password || (!isLogin && (!fullName || !confirmPassword))) {
+      setError("⚠️ Please fill in all required fields.");
+      return;
+    }
 
-  if (!isLogin && password !== confirmPassword) {
-    setError("❌ Passwords do not match.");
-    return;
-  }
+    if (!isLogin && password !== confirmPassword) {
+      setError("❌ Passwords do not match.");
+      return;
+    }
 
     try {
       const endpoint = isLogin
@@ -42,6 +46,13 @@ const AuthForm = () => {
 
 
       const res = await axios.post(endpoint, payload);
+
+      dispatch(
+      setCredentials({
+        token: res.data.token,
+        userId: res.data.user.id, // backend sends this
+      })
+    );
 
       setSuccess(`${isLogin ? "Login" : "Registration"} successful ✅`);
       console.log(res.data);
@@ -105,7 +116,7 @@ const AuthForm = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                
+
               />
               <input
                 type="text"
@@ -123,7 +134,7 @@ const AuthForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-            
+
           />
 
           <input
@@ -132,7 +143,7 @@ const AuthForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-            
+
           />
 
           {!isLogin && (
@@ -142,7 +153,7 @@ const AuthForm = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-              
+
             />
           )}
 
@@ -158,7 +169,18 @@ const AuthForm = () => {
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+
+              setFullName("");
+              setEmail("");
+              setPassword("");
+              setConfirmPassword("");
+              setPhoneNumber("");
+
+            }
+
+            }
             className="text-teal-600 font-semibold hover:underline"
           >
             {isLogin ? "Register here" : "Login here"}
