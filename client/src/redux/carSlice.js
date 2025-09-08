@@ -1,14 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const fetchCars = createAsyncThunk(
-    "cars/fetchCars",
-    async(__, thunkAPI) => {
+export const fetchCars = createAsyncThunk("cars/fetchCars",async(__, thunkAPI) => {
         try{
             const res = await axios.get("http://localhost:4051/api/cars/list");
             return res.data
         }catch(error){
-            return thunkAPI.rejectWithValue(error.response?.data?.error || err.message)
+            return thunkAPI.rejectWithValue(error.response?.data?.error || error.message)
         }
     }
 );
@@ -29,6 +27,7 @@ const carSlice = createSlice({
         })
 
         .addCase(fetchCars.fulfilled, (state, action) => {
+             console.log("Cars fetched:", action.payload)
             state.loading = false
             state.list = action.payload
         })
