@@ -34,6 +34,7 @@ router.post("/add", async (req, res) => {
       imageUrls,
       insuranceExpiryDate,
       serviceDueDate,
+      category
     } = req.body;
 
     // ✅ Validation
@@ -79,6 +80,7 @@ router.post("/add", async (req, res) => {
       imageUrls,
       insuranceExpiryDate,
       serviceDueDate,
+      category1
     });
 
     await newCar.save();
@@ -103,8 +105,9 @@ router.get("/list", async(req, res) => {
         }
 
         return res.status(200).json(cars)
+      
     }catch(err){
-        return res.status(500).json({error: "Server error finding the cars!!" || error.message})
+        return res.status(500).json({error: "Server error finding the cars!!" || err.message})
     }
 
 });
@@ -116,6 +119,8 @@ router.get("/:id", async (req, res) => {
         if(!car){
             return res.status(404).json({error: "Error finding car"})
         }
+
+        res.status(200).json(car)
     }catch(error){
         return res.status(500).json({error: "Server error finding the cars!!" || error.message})
     }

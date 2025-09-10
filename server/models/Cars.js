@@ -35,15 +35,22 @@ const carSchema = new mongoose.Schema(
       enum: ["Available", "Booked", "In Service", "Unavailable"],
       default: "Available",
     },
-   availableFrom: {
-   type: Date,
+    availableFrom: {
+      type: Date,
     },
-   availableUntil: {
-   type: Date,
-   default: Date.now
+    availableUntil: {
+      type: Date,
+      default: Date.now,
     },
     pickupLocation: { type: String, required: true },
     dropoffOptions: [String],
+
+    // 👉 New Category field
+    category: {
+      type: String,
+      enum: ["SUV", "Sedan", "Luxury", "Van", "Electric"],
+      required: true,
+    },
 
     // Features
     features: {
