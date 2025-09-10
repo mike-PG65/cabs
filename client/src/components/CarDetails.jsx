@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import AddToCart from "./AddToCart";
+import HireNow from "./HireNow";
 
 const CarDetails = () => {
   const { id } = useParams(); // get car id from URL
@@ -84,26 +85,31 @@ const CarDetails = () => {
       </div>
 
       {/* Features */}
-      <div className="bg-white shadow rounded-lg p-4 mb-8">
-        <h3 className="font-semibold text-lg mb-2">Features</h3>
-        <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-gray-600">
-          {car.features?.gps && <li>✅ GPS</li>}
-          {car.features?.bluetooth && <li>✅ Bluetooth</li>}
-          {car.features?.usbSupport && <li>✅ USB Support</li>}
-          {car.features?.childSeatAvailable && <li>✅ Child Seat</li>}
-          {car.features?.insuranceIncluded && <li>✅ Insurance Included</li>}
-          {car.features?.extras?.map((extra, idx) => (
-            <li key={idx}>✅ {extra}</li>
-          ))}
-        </ul>
-      </div>
+     <div className="bg-white shadow rounded-lg p-4 mb-8">
+  <h3 className="font-semibold text-lg mb-2">Features</h3>
+  <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-gray-600">
+    <li>{car.features?.gps ? "✅ GPS" : "❌ GPS"}</li>
+    <li>{car.features?.bluetooth ? "✅ Bluetooth" : "❌ Bluetooth"}</li>
+    <li>{car.features?.usbSupport ? "✅ USB Support" : "❌ USB Support"}</li>
+    <li>{car.features?.childSeatAvailable ? "✅ Child Seat" : "❌ Child Seat"}</li>
+    <li>{car.features?.insuranceIncluded ? "✅ Insurance Included" : "❌ Insurance Included"}</li>
+
+    {/* Extras (show all, even if none are available) */}
+    {car.features?.extras?.length > 0 ? (
+      car.features.extras.map((extra, idx) => (
+        <li key={idx}>✅ {extra}</li>
+      ))
+    ) : (
+      <li>❌ No Extras</li>
+    )}
+  </ul>
+</div>
 
       {/* Actions */}
       <div className="flex gap-4">
-        <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition">
-          Hire Now
-        </button>
         <AddToCart car={car} />
+        <HireNow />
+        
       </div>
     </div>
   );
