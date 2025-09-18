@@ -106,9 +106,9 @@ const CarDetails = () => {
 </div>
 
       {/* Actions */}
-      <div className="flex gap-4">
+      <div className='space-x-4 m-auto'>
         <AddToCart car={car} />
-        <HireNow />
+        <HireNow car={car}/>
         
       </div>
     </div>

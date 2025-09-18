@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react"; // for close icon
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../redux/authSlice";
+import { useNavigate } from "react-router-dom";
 
-const AuthForm = () => {
-  const [isLogin, setIsLogin] = useState(true);
+const AuthForm = ({mode}) => {
+  const [isLogin, setIsLogin] = useState(mode === "login");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,7 +18,8 @@ const AuthForm = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,6 +57,7 @@ const AuthForm = () => {
     );
 
       setSuccess(`${isLogin ? "Login" : "Registration"} successful ✅`);
+      navigate('/categories')
       console.log(res.data);
     } catch (err) {
       console.error("Error:", err.response?.data?.error || err.message);

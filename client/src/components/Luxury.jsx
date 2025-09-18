@@ -2,12 +2,13 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCars } from "../redux/carSlice";
-import { Link, useNavigate } from "react-router-dom";
 import AddToCart from "./AddToCart";
 import View from "./View";
-// import { addToCart } from "../redux/cartSlice"; // if you already have a cart slice
+import { AiOutlineClose } from "react-icons/ai";
 
 const Luxury = ({ category }) => {
+  const [message, setMessage] = React.useState({ text: "", type: "" });
+
   const dispatch = useDispatch();
   const { list: cars = [], error, loading } = useSelector(
     (state) => state.cars || {}
@@ -22,19 +23,31 @@ const Luxury = ({ category }) => {
   if (loading) return <div className="p-6">Loading cars...</div>;
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
-  // Handler for add to cart
-  const handleAddToCart = (car) => {
-    // dispatch(addToCart(car)); // <-- if you have cartSlice
-    console.log("Added to cart:", car);
-  };
-
-  
-
   return (
     <div className="p-6 bg-gray-50 h-full flex flex-col">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
         {category} Cars 🚗
       </h2>
+
+      {/* ✅ Success & Error Message */}
+      {message.text && (
+  <div
+    className={`relative p-4 border rounded flex items-center justify-between ${
+      message.type === "success"
+        ? "bg-green-100 text-green-700 border-green-300"
+        : "bg-red-100 text-red-700 border-red-300"
+    }`}
+  >
+    <span>{message.text}</span>
+    <button
+      onClick={() => setMessage({ text: "", type: "" })}
+      className="ml-4 text-gray-600 hover:text-gray-800"
+      aria-label="Close"
+    >
+      <AiOutlineClose size={20} />
+    </button>
+  </div>
+)}
 
       <div className="flex-1 overflow-y-auto pr-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
@@ -93,9 +106,9 @@ const Luxury = ({ category }) => {
               </div>
 
               {/* Buttons */}
-              <div className="flex gap-2">
-                <View car={car}/>
-                <AddToCart car={car}/>
+              <div className="flex gap-3">
+                <View car={car} />
+                <AddToCart car={car} onMessage={setMessage} />
               </div>
             </div>
           ))}

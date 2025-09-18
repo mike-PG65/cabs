@@ -1,4 +1,5 @@
 import { ShoppingCart, User, Search } from "lucide-react";
+import {Link} from 'react-router-dom'
 
 const Navbar = () => {
   return (
@@ -24,7 +25,7 @@ const Navbar = () => {
 
           {/* Right: Nav + Icons */}
           <div className="flex items-center space-x-6">
-            <a href="/" className="hidden sm:inline text-gray-700 hover:text-blue-600">
+            <a href="/home" className="hidden sm:inline text-gray-700 hover:text-blue-600">
               Home
             </a>
             <a href="/shop" className="hidden sm:inline text-gray-700 hover:text-blue-600">
@@ -35,18 +36,22 @@ const Navbar = () => {
             </a>
 
             {/* Cart */}
-            <div className="relative cursor-pointer">
-              <ShoppingCart className="w-6 h-6 text-gray-700 hover:text-blue-600" />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5">
-                3
-              </span>
-            </div>
+            <Link to='/cart'>
+              <div className="relative cursor-pointer">
+                <ShoppingCart className="w-6 h-6 text-gray-700 hover:text-blue-600" />
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5">
+                  3
+                </span>
+              </div>
+            </Link>
 
             {/* User */}
+            <Link to="/login">
             <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600">
               <User className="w-6 h-6" />
               <span className="hidden sm:inline">Login</span>
             </button>
+            </Link>
           </div>
         </div>
       </div>

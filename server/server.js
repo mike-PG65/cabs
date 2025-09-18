@@ -8,7 +8,11 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173", // change to your frontend port
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true, // if you use cookies
+}));
 
 app.use(express.json())
 
@@ -23,8 +27,12 @@ const runServer = async () => {
 
 runServer()
 
-const carRoutes = require('./cars/cars')
-const usersRoutes = require('./users/user')
+const carRoutes = require('./controllers/cars');
+const usersRoutes = require('./controllers/user');
+const cartRoutes = require('./controllers/cart');
+const hireRoutes = require("./controllers/hire")
 
-app.use("/api/cars", carRoutes)
-app.use('/api/auth', usersRoutes)
+app.use("/api/cars", carRoutes);
+app.use('/api/auth', usersRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/hire', hireRoutes);

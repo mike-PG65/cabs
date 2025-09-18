@@ -4,14 +4,19 @@ import AuthForm from './pages/Auth'
 import Navbar from './components/Navbar'
 import Categories from './pages/Categories'
 import CarDetails from './components/CarDetails'
+import CartPage from './pages/Cart'
+import HirePage from './pages/HirePage'
 const App = () => {
   return (
     <BrowserRouter>
     <Navbar/>
     <Routes>
-      <Route path="/" element={<AuthForm/>}/>
+      <Route path="/login" element={<AuthForm mode="login"/>}/>
+      <Route path="/register" element={<AuthForm mode = "register"/>}/>
       <Route path='/categories' element={<Categories/>}/>
       <Route path="/cardetails/:id" element={<CarDetails/>}/>
+      <Route path='/cart' element={<CartPage/>}/>
+      <Route path="/hire" element={<HirePage/>}/>
     </Routes>
     </BrowserRouter>
   )
