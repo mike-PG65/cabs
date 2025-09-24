@@ -49,15 +49,15 @@ const CartPage = () => {
   };
 
   const handleClearCart = async () => {
-  try {
-    await dispatch(clearCart()).unwrap();
-    setMessage({ text: "Cart cleared successfully!", type: "success" });
-  } catch (err) {
-    setMessage({ text: err || "Failed to clear cart.", type: "error" });
-  }
-};
+    try {
+      await dispatch(clearCart()).unwrap();
+      setMessage({ text: "Cart cleared successfully!", type: "success" });
+    } catch (err) {
+      setMessage({ text: err || "Failed to clear cart.", type: "error" });
+    }
+  };
 
- const handleProceed = () => {
+  const handleProceed = () => {
     navigate("/hire", { state: { items } });
   };
 
@@ -71,23 +71,22 @@ const CartPage = () => {
 
       {/* Inline message */}
       {message.text && (
-  <div
-    className={`relative p-4 border rounded flex items-center justify-between ${
-      message.type === "success"
-        ? "bg-green-100 text-green-700 border-green-300"
-        : "bg-red-100 text-red-700 border-red-300"
-    }`}
-  >
-    <span>{message.text}</span>
-    <button
-      onClick={() => setMessage({ text: "", type: "" })}
-      className="ml-4 text-gray-600 hover:text-gray-800"
-      aria-label="Close"
-    >
-      <AiOutlineClose size={20} />
-    </button>
-  </div>
-)}
+        <div
+          className={`relative p-4 border rounded flex items-center justify-between ${message.type === "success"
+              ? "bg-green-100 text-green-700 border-green-300"
+              : "bg-red-100 text-red-700 border-red-300"
+            }`}
+        >
+          <span>{message.text}</span>
+          <button
+            onClick={() => setMessage({ text: "", type: "" })}
+            className="ml-4 text-gray-600 hover:text-gray-800"
+            aria-label="Close"
+          >
+            <AiOutlineClose size={20} />
+          </button>
+        </div>
+      )}
 
       {items.length === 0 && <div className="p-4 bg-white rounded shadow">Your cart is empty</div>}
 
@@ -111,12 +110,14 @@ const CartPage = () => {
                 value={dates[item.carId._id]?.startDate || ""}
                 onChange={e => handleDateChange(item.carId._id, "startDate", e.target.value)}
                 className="border p-2 rounded w-32"
+                min={new Date().toISOString().split("T")[0]}   // 👈 Prevent past start dates
               />
               <input
                 type="date"
                 value={dates[item.carId._id]?.endDate || ""}
                 onChange={e => handleDateChange(item.carId._id, "endDate", e.target.value)}
                 className="border p-2 rounded w-32"
+                min={new Date().toISOString().split("T")[0]}   // 👈 Prevent past end dates
               />
               <button
                 onClick={() => handleUpdateDates(item.carId._id)}
@@ -149,9 +150,9 @@ const CartPage = () => {
           </button>
 
 
-          <button 
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          onClick={handleProceed}>
+          <button
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            onClick={handleProceed}>
             Proceed to Hire
           </button>
         </div>

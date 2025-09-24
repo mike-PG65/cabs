@@ -30,9 +30,11 @@ runServer()
 const carRoutes = require('./controllers/cars');
 const usersRoutes = require('./controllers/user');
 const cartRoutes = require('./controllers/cart');
-const hireRoutes = require("./controllers/hire")
+const hireRoutes = require("./controllers/hire");
+const mpesaRoutes = require("./controllers/mpesa");
 
 app.use("/api/cars", carRoutes);
 app.use('/api/auth', usersRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/hire', hireRoutes);
+app.use("/api/mpesa", mpesaRoutes);
