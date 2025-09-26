@@ -4,22 +4,22 @@ const Categories = () => {
   const categories = ["SUV", "Sedan", "Luxury", "Van", "Electric"];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Page Title */}
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">
-        Car Categories 🚘
-      </h1>
-
-      {/* Each category block */}
-      <div className="space-y-12">
+    <div className="bg-gray-50 min-h-screen">
+      {/* Categories Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-12 space-y-16">
         {categories.map((cat) => (
-          <div key={cat} className="bg-white shadow rounded-2xl p-6">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-700">
+          <section
+            key={cat}
+            className="bg-white rounded-2xl shadow hover:shadow-xl transition transform hover:-translate-y-1 p-6"
+          >
+            {/* Category Header */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
               {cat} Cars
             </h2>
-            {/* Reuse your Available component */}
+
+            {/* Car List */}
             <Luxury category={cat} />
-          </div>
+          </section>
         ))}
       </div>
     </div>

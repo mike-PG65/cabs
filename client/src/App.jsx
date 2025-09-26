@@ -7,6 +7,8 @@ import CarDetails from './components/CarDetails'
 import CartPage from './pages/Cart'
 import HirePage from './pages/HirePage'
 import HireReceipt from './pages/HireReceipt'
+import Home from './pages/Home'
+import Footer from './components/Footer'
 const App = () => {
   return (
     <BrowserRouter>
@@ -19,7 +21,9 @@ const App = () => {
       <Route path='/cart' element={<CartPage/>}/>
       <Route path="/hire" element={<HirePage/>}/>
        <Route path="/hire/:hireId/receipt" element={<HireReceipt />} />
+       <Route path='/' element={<Home/>}/>
     </Routes>
+    <Footer />
     </BrowserRouter>
   )
 }
