@@ -11,7 +11,7 @@ export const addToCart = createAsyncThunk(
   async ({ carId }, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      if (!token) return rejectWithValue("No token found");
+      if (!token) return rejectWithValue("Please login");
 
       const res = await axios.post(`${API_URL}/`, { carId }, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }

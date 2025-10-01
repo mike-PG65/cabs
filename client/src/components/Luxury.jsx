@@ -23,7 +23,10 @@ const Luxury = ({ category }) => {
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
-    <div className="p-4 sm:p-6 bg-gray-50 h-full flex flex-col rounded-xl">
+    <div className="p-6 bg-gray-50 h-full flex flex-col rounded-xl">
+      {/* Section Title */}
+
+
       {/* ✅ Success & Error Message */}
       {message.text && (
         <div
@@ -46,8 +49,8 @@ const Luxury = ({ category }) => {
       )}
 
       {/* Car Grid */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 md:gap-8">
+      <div className="flex-1 overflow-y-auto pr-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
           {filteredCars.map((car) => (
             <div
               key={car._id}
@@ -58,16 +61,16 @@ const Luxury = ({ category }) => {
                 <img
                   src={car.imageUrls[0]}
                   alt={`${car.brand} ${car.model}`}
-                  className="w-full h-48 sm:h-56 object-cover"
+                  className="w-full h-44 object-cover"
                 />
               ) : (
-                <div className="w-full h-48 sm:h-56 bg-gray-200 flex items-center justify-center text-gray-500">
+                <div className="w-full h-44 bg-gray-200 flex items-center justify-center text-gray-500">
                   No Image
                 </div>
               )}
 
               {/* Info */}
-              <div className="p-4 sm:p-5 flex flex-col flex-1">
+              <div className="p-5 flex flex-col flex-1">
                 <h3 className="text-lg font-bold text-gray-800 truncate">
                   {car.brand} {car.model}
                 </h3>
@@ -103,7 +106,7 @@ const Luxury = ({ category }) => {
                 </div>
 
                 {/* Buttons */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex gap-3">
                   <View car={car} />
                   <AddToCart car={car} onMessage={setMessage} />
                 </div>
