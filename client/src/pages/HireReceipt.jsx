@@ -11,11 +11,13 @@ export default function HireReceipt() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState({ type: "", text: "" }); // <-- success/error messages
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchHire = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:4051/api/hire/${hireId}`, {
+        const res = await axios.get(`${API_BASE_URL}/api/hire/${hireId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setHire(res.data.hire);
@@ -39,7 +41,7 @@ export default function HireReceipt() {
   const handleSendEmail = async () => {
     try {
       await axios.post(
-        `http://localhost:4051/api/hire/${hireId}/send-receipt`,
+        `${API_BASE_URL}/api/hire/${hireId}/send-receipt`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
