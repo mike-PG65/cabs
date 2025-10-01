@@ -34,7 +34,7 @@ app.use("/api/mpesa", mpesaRoutes);
 const __dirname1 = path.resolve(); // get project root
 app.use(express.static(path.join(__dirname1, "..", "client", "dist")));
 
-app.get("*", (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.resolve(__dirname1, "..", "client", "dist", "index.html"));
 });
 
