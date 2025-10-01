@@ -16,6 +16,9 @@ export default function HirePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   // ✅ Calculate total
   const calculateTotal = useMemo(() => {
     return items.reduce((acc, item) => {
@@ -65,7 +68,7 @@ const handleHire = async () => {
     setLoading(true);
 
     // ✅ Create hire
-    const res = await axios.post("http://localhost:4051/api/hire", hireData, {
+    const res = await axios.post(`${API_BASE_URL}/api/hire`, hireData, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -79,7 +82,7 @@ const handleHire = async () => {
     attempts++;
     try {
       const statusRes = await axios.get(
-        `http://localhost:4051/api/hire/${hireId}`,
+        `${API_BASE_URL}/api/hire/${hireId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
