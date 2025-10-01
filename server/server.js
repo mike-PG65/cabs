@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const connectDb = require('./config/db');
+require("./cronJobs");
 
 // Load environment variables
 dotenv.config();

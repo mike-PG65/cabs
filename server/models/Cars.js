@@ -32,7 +32,7 @@ const carSchema = new mongoose.Schema(
     depositRequired: { type: Number, default: 0, min: 0 },
     availabilityStatus: {
       type: String,
-      enum: ["Available", "Booked", "In Service", "Unavailable"],
+      enum: ["Available", "Booked", "Unavailable"],
       default: "Available",
     },
     availableFrom: {

@@ -125,7 +125,7 @@ router.get("/:id", async (req, res) => {
 
     if (car.availableFrom && car.availableUntil) {
       if (now >= car.availableFrom && now <= car.availableUntil) {
-        status = "Unavailable";
+        status = "Booked";
       }
     }
 

@@ -43,7 +43,7 @@ router.post("", authMiddleware, async (req, res) => {
     // 🔑 Mark cars as hired
     for (let item of items) {
       await Car.findByIdAndUpdate(item.carId, {
-        availabilityStatus: "hired",
+        availabilityStatus: "Booked",
       });
     }
 
@@ -114,13 +114,6 @@ router.post("/:hireId/complete", authMiddleware, async (req, res) => {
 
     hire.status = "completed";
     await hire.save();
-
-    // free cars
-    for (let item of hire.items) {
-      await Car.findByIdAndUpdate(item.carId, {
-        availabilityStatus: "available",
-      });
-    }
 
     res.json({ message: "Hire completed and cars freed", hire });
   } catch (err) {

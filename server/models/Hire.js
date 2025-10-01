@@ -37,7 +37,7 @@ const hireSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "confirmed" , "cancelled"],
+    enum: ["pending", "confirmed" , "cancelled", "ended"],
     default: "pending",
   },
   payment: paymentSchema,
