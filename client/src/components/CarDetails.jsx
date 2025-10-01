@@ -11,10 +11,12 @@ const CarDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchCar = async () => {
       try {
-        const res = await axios.get(`http://localhost:4051/api/cars/${id}`); 
+        const res = await axios.get(`${API_BASE_URL}/api/cars/${id}`); 
         setCar(res.data);
       } catch (err) {
         setError("Failed to fetch car details");

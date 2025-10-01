@@ -10,10 +10,13 @@ export default function Home() {
     const [search, setSearch] = useState("");
     const navigate = useNavigate();
 
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
     useEffect(() => {
         const fetchCars = async () => {
             try {
-                const res = await axios.get("http://localhost:4051/api/cars/list");
+                const res = await axios.get(`${API_BASE_URL}/api/cars/list`);
                 const availableCars = res.data.filter(
                     (car) => car.availabilityStatus?.toLowerCase() === "available"
                 );
