@@ -1,4 +1,4 @@
-import { ShoppingCart, User, Search } from "lucide-react";
+import { ShoppingCart, User, Search, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -9,11 +9,12 @@ const Navbar = () => {
   const [cars, setCars] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   // 🔹 Redux cart count
   const cartItems = useSelector((state) => state.cart?.items ?? []);
-const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
+  const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -27,7 +28,7 @@ const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
     fetchCars();
   }, []);
 
-  // 🔍 Filter cars by brand or model
+  // 🔍 Filter cars
   useEffect(() => {
     if (query.trim()) {
       const results = cars.filter(
@@ -53,7 +54,7 @@ const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
             </Link>
           </div>
 
-          {/* Center: Search */}
+          {/* Center: Search (hidden on small) */}
           <div className="hidden md:flex flex-1 max-w-lg mx-6 relative">
             <div className="relative w-full">
               <input
@@ -80,14 +81,11 @@ const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
                         setShowResults(false);
                       }}
                     >
-                      {/* Car Image */}
                       <img
                         src={car.imageUrls[0] || "https://via.placeholder.com/60"}
                         alt={`${car.brand} ${car.model}`}
                         className="w-14 h-10 object-cover rounded mr-3"
                       />
-
-                      {/* Car Details */}
                       <div>
                         <p className="font-medium">
                           {car.brand} {car.model}
@@ -107,15 +105,18 @@ const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
 
           {/* Right: Nav + Icons */}
           <div className="flex items-center space-x-6">
-            <Link to="/" className="hidden sm:inline text-gray-700 hover:text-blue-600">
-              Home
-            </Link>
-            <Link to="/cars" className="hidden sm:inline text-gray-700 hover:text-blue-600">
-              Cars
-            </Link>
-            <Link to="/categories" className="hidden sm:inline text-gray-700 hover:text-blue-600">
-              Categories
-            </Link>
+            {/* Large screen links */}
+            <div className="hidden sm:flex space-x-6">
+              <Link to="/" className="text-gray-700 hover:text-blue-600">
+                Home
+              </Link>
+              <Link to="/cars" className="text-gray-700 hover:text-blue-600">
+                Cars
+              </Link>
+              <Link to="/categories" className="text-gray-700 hover:text-blue-600">
+                Categories
+              </Link>
+            </div>
 
             {/* Cart */}
             <Link to="/cart">
@@ -136,8 +137,43 @@ const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
                 <span className="hidden sm:inline">Login</span>
               </button>
             </Link>
+
+            {/* Mobile menu icon */}
+            <button
+              className="sm:hidden text-gray-700 hover:text-blue-600"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {menuOpen && (
+          <div className="sm:hidden bg-white border-t border-gray-200 p-4 space-y-2">
+            <Link
+              to="/"
+              className="block text-gray-700 hover:text-blue-600"
+              onClick={() => setMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              to="/cars"
+              className="block text-gray-700 hover:text-blue-600"
+              onClick={() => setMenuOpen(false)}
+            >
+              Cars
+            </Link>
+            <Link
+              to="/categories"
+              className="block text-gray-700 hover:text-blue-600"
+              onClick={() => setMenuOpen(false)}
+            >
+              Categories
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );
