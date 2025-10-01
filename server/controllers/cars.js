@@ -96,34 +96,43 @@ router.post("/add", async (req, res) => {
 });
 
 
-router.get("/list", async(req, res) => {
-    try{
-        const cars = await Car.find();
+router.get("/list", async (req, res) => {
+  try {
+    const cars = await Car.find();
 
-        if (!cars){
-            return res.status(404).json({message: "Cars not found!!"})
-        }
-
-        return res.status(200).json(cars)
-      
-    }catch(err){
-        return res.status(500).json({error: "Server error finding the cars!!" || err.message})
+    if (!cars) {
+      return res.status(404).json({ message: "Cars not found!!" })
     }
+
+    return res.status(200).json(cars)
+
+  } catch (err) {
+    return res.status(500).json({ error: "Server error finding the cars!!" || err.message })
+  }
 
 });
 
 router.get("/:id", async (req, res) => {
-    try{
-        const car = await Car.findById(req.params.id)
+  try {
+    const car = await Car.findById(req.params.id)
 
-        if(!car){
-            return res.status(404).json({error: "Error finding car"})
-        }
-
-        res.status(200).json(car)
-    }catch(error){
-        return res.status(500).json({error: "Server error finding the cars!!" || error.message})
+    if (!car) {
+      return res.status(404).json({ error: "Error finding car" })
     }
+
+    const now = new Date();
+    let status = "Available";
+
+    if (car.availableFrom && car.availableUntil) {
+      if (now >= car.availableFrom && now <= car.availableUntil) {
+        status = "Unavailable";
+      }
+    }
+
+    res.status(200).json(car)
+  } catch (error) {
+    return res.status(500).json({ error: "Server error finding the cars!!" || error.message })
+  }
 });
 
 router.put("/edit/:id", async (req, res) => {
@@ -151,17 +160,17 @@ router.put("/edit/:id", async (req, res) => {
 });
 
 router.delete("/delete/:id", async (req, res) => {
-  try{
+  try {
     const deletedCar = await Car.deleteOne(req.params._id)
 
-    if(!deletedCar){
-      return res.status(404).json({error: "Car not found!!"})
+    if (!deletedCar) {
+      return res.status(404).json({ error: "Car not found!!" })
     }
 
-    return res.status(200).json({message: "Car deleted sucessfully!"})
-  }catch(error){
-    return res.status(500).json({error: "Server error while deleting the car"})
-    };
+    return res.status(200).json({ message: "Car deleted sucessfully!" })
+  } catch (error) {
+    return res.status(500).json({ error: "Server error while deleting the car" })
+  };
 })
 
 
