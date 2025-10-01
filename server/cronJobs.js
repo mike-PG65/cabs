@@ -4,9 +4,8 @@ const Hire = require("./models/Hire");
 const Car = require("./models/Cars");
 
 // Run every midnight (00:00)
-cron.schedule("*/1 * * * *", async () => {
-  console.log("⏰ Running daily hire check...");
-
+cron.schedule("0 * * * *", async () => {
+  console.log("⏰ Running hourly hire check...");
   try {
     const now = new Date();
 
