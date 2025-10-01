@@ -1,9 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 export const fetchCars = createAsyncThunk("cars/fetchCars",async(__, thunkAPI) => {
         try{
-            const res = await axios.get("http://localhost:4051/api/cars/list");
+            const res = await axios.get(`${API_BASE_URL}/api/cars/list`);
             return res.data
         }catch(error){
             return thunkAPI.rejectWithValue(error.response?.data?.error || error.message)

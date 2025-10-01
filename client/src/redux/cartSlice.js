@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://localhost:4051/api/cart";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const API_URL = `${API_BASE_URL}/api/cart`;
 
 // Add to cart
 export const addToCart = createAsyncThunk(
