@@ -80,7 +80,7 @@ router.post("/add", async (req, res) => {
       imageUrls,
       insuranceExpiryDate,
       serviceDueDate,
-      category1
+      category
     });
 
     await newCar.save();

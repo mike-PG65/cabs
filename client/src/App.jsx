@@ -9,6 +9,7 @@ import HirePage from './pages/HirePage'
 import HireReceipt from './pages/HireReceipt'
 import Home from './pages/Home'
 import Footer from './components/Footer'
+import Cars from './pages/Cars'
 const App = () => {
   return (
     <BrowserRouter>
@@ -22,6 +23,7 @@ const App = () => {
       <Route path="/hire" element={<HirePage/>}/>
        <Route path="/hire/:hireId/receipt" element={<HireReceipt />} />
        <Route path='/' element={<Home/>}/>
+       <Route path='/cars' element={<Cars/>}/>
     </Routes>
     <Footer />
     </BrowserRouter>
