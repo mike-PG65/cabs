@@ -29,7 +29,7 @@ export const fetchCart = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      if (!token) return rejectWithValue("No token found");
+      if (!token) return rejectWithValue("Please login");
 
       const res = await axios.get(`${API_URL}/list`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -46,7 +46,7 @@ export const removeFromCart = createAsyncThunk(
   async ( carId, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      if (!token) return rejectWithValue("No token found!!")
+      if (!token) return rejectWithValue("Please login!!")
 
       const res = await axios.delete(`${API_URL}/${carId}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -63,7 +63,7 @@ export const clearCart = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      if (!token) return rejectWithValue("No token found");
+      if (!token) return rejectWithValue("Please login");
 
       const res = await axios.delete(`${API_URL}/clear`, {
         headers: { Authorization: `Bearer ${token}` }
