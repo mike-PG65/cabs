@@ -21,6 +21,8 @@ const AuthForm = ({mode}) => {
   const dispatch = useDispatch();
    const navigate = useNavigate();
 
+   const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccess("");
@@ -39,8 +41,8 @@ const AuthForm = ({mode}) => {
 
     try {
       const endpoint = isLogin
-        ? "http://localhost:4051/api/auth/login"
-        : "http://localhost:4051/api/auth/register";
+        ? `${API_BASE_URL}/api/auth/login`
+        : `${API_BASE_URL}/api/auth/register`;
 
       const payload = isLogin
         ? { email, password }
