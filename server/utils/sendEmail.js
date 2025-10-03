@@ -1,31 +1,28 @@
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require("nodemailer");
 
-async function sendEmail(to, subject, html, pdfBuffer = null) {
+const transporter = nodemailer.createTransport({
+  service: "gmail", // you can also use host/port
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // App password (not normal Gmail password)
+  },
+});
+
+async function sendEmail(to, subject, html, attachments = []) {
+  const mailOptions = {
+    from: `"My Cars" <${process.env.EMAIL_USER}>`,
+    to,
+    subject,
+    html,
+    attachments,
+  };
+
   try {
-    const emailData = {
-      from: "My Cars <noreply@mycars.com>", // must match a verified Resend domain
-      to,
-      subject,
-      html, // use HTML instead of plain text for better formatting
-    };
-
-    // Only add attachment if a PDF buffer is provided
-    if (pdfBuffer) {
-      emailData.attachments = [
-        {
-          filename: "receipt.pdf",
-          content: pdfBuffer.toString("base64"),
-          type: "application/pdf",
-        },
-      ];
-    }
-
-    const response = await resend.emails.send(emailData);
-    console.log("✅ Email sent:", response.id || response);
-    return response;
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.response);
+    return info;
   } catch (err) {
-    console.error("❌ Resend error:", err.message);
+    console.error("❌ Email send error:", err);
     throw err;
   }
 }
