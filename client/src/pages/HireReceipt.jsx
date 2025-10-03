@@ -38,22 +38,24 @@ export default function HireReceipt() {
   };
 
   // Call backend to send receipt via email
-  const handleSendEmail = async () => {
-    try {
-      await axios.post(
-        `${API_BASE_URL}/api/hire/${hireId}/send-receipt`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMessage({ type: "success", text: "📧 Receipt sent to your email and admin!" });
-    } catch (err) {
-      console.error("Send receipt error:", err.response?.data || err.message);
-      setMessage({ type: "error", text: "❌ Failed to send receipt" });
-    }
+ const handleSendEmail = async () => {
+  console.log("📨 Send email clicked"); // <-- confirm button works
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/api/hire/${hireId}/send-receipt`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log("✅ Send email response:", res.data); // <-- log response
+    setMessage({ type: "success", text: "📧 Receipt sent to your email and admin!" });
+  } catch (err) {
+    console.error("❌ Send receipt error:", err.response?.data || err.message);
+    setMessage({ type: "error", text: "❌ Failed to send receipt" });
+  }
 
-    // Clear message after 5 seconds
-    setTimeout(() => setMessage({ type: "", text: "" }), 5000);
-  };
+  // Clear message after 5 seconds
+  setTimeout(() => setMessage({ type: "", text: "" }), 5000);
+};
 
   if (loading)
     return <p className="text-gray-600 text-center">Loading hire receipt...</p>;

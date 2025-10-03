@@ -123,70 +123,71 @@ router.post("/:hireId/complete", authMiddleware, async (req, res) => {
 });
 
 // 🧾 Generate PDF Receipt
+// 🧾 Generate PDF Receipt (download)
 router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
   try {
     const { hireId } = req.params;
     const userId = req.user.id;
 
-    const hire = await Hire.findOne({ _id: hireId, userId }).populate(
-      "items.carId"
-    );
-
+    const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
     if (!hire) {
       return res.status(404).json({ error: "Hire not found" });
     }
 
-    // Build HTML template
-    const html = `
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; }
-            th { background: #f4f4f4; }
-          </style>
-        </head>
-        <body>
-          <h1>Car Hire Receipt</h1>
-          <p><strong>Receipt No:</strong> ${hire._id}</p>
-          <p><strong>Date:</strong> ${new Date(hire.createdAt).toLocaleString()}</p>
-          <h2>Hired Cars</h2>
-          <table>
-            <tr><th>Car</th><th>Price</th></tr>
-            ${hire.items
-              .map(
-                (item) =>
-                  `<tr>
-                     <td>${item.carId.brand} ${item.carId.model} (${item.carId.year})</td>
-                     <td>Ksh ${item.totalPrice}</td>
-                   </tr>`
-              )
-              .join("")}
-          </table>
-          <h2>Total: Ksh ${hire.totalAmount}</h2>
-        </body>
-      </html>
-    `;
+    // Create PDF
+    const doc = new PDFDocument({ margin: 40 });
 
-    // Generate PDF
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
-    await browser.close();
+    // Set response headers
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt-${hire._id}.pdf`
+    );
 
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=receipt-${hire._id}.pdf`,
+    // Pipe directly to response
+    doc.pipe(res);
+
+    // 👉 PDF Content (same as email receipt for consistency)
+    doc.fontSize(22).text("Car Hire Receipt", { align: "center" });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Receipt No: ${hire._id}`);
+    doc.text(`Date: ${new Date(hire.createdAt).toLocaleString()}`);
+    doc.text(`Status: ${hire.status}`);
+    doc.moveDown();
+
+    doc.fontSize(16).text("Car Details", { underline: true });
+    hire.items.forEach(item => {
+      doc.moveDown(0.5);
+      doc.fontSize(12).text(`${item.carId.brand} ${item.carId.model} (${item.carId.year})`);
+      doc.text(
+        `Reg: ${item.carId.registrationNumber} | ${item.carId.transmission}, ${item.carId.fuelType} | ${item.carId.color}, ${item.carId.seats} Seats`
+      );
+      doc.text(
+        `Pickup: ${item.carId.pickupLocation} | Dropoff: ${item.carId.dropoffOptions?.[0] || "Not specified"}`
+      );
+      doc.text(`Price: Ksh ${item.totalPrice}`, { align: "right" });
     });
-    res.send(pdfBuffer);
+
+    doc.moveDown();
+    doc.fontSize(16).text("Payment Summary", { underline: true });
+    doc.fontSize(12).text(`Total Amount: Ksh ${hire.totalAmount}`);
+    doc.text(`Payment Method: ${hire.payment.method}`);
+    doc.text(`Payment Status: ${hire.payment.status}`);
+
+    doc.moveDown(2);
+    doc.fontSize(10).text("Thank you for choosing our service.", { align: "center" });
+    doc.fontSize(10).text("For inquiries, contact support@mycars.com", { align: "center" });
+
+    // Finalize
+    doc.end();
+
   } catch (err) {
     console.error("Receipt PDF error:", err);
     res.status(500).json({ error: "Failed to generate receipt PDF" });
   }
 });
+
 
 // 📧 Send receipt to email
 router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
