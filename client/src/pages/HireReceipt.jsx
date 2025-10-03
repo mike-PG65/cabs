@@ -38,16 +38,29 @@ export default function HireReceipt() {
   };
 
   // Call backend to send receipt via email
- const handleSendEmail = async () => {
-  console.log("📨 Send email clicked"); // <-- confirm button works
+const handleSendEmail = async () => {
+  console.log("📨 Send email clicked");
   try {
     const res = await axios.post(
       `${API_BASE_URL}/api/hire/${hireId}/send-receipt`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    console.log("✅ Send email response:", res.data); // <-- log response
+
+    console.log("✅ Send email response:", res.data);
+
+    // ✅ Show success message
     setMessage({ type: "success", text: "📧 Receipt sent to your email and admin!" });
+
+    // ✅ Download the PDF locally
+    if (res.data.pdf) {
+      const link = document.createElement("a");
+      link.href = `data:application/pdf;base64,${res.data.pdf}`;
+      link.download = res.data.filename || "receipt.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   } catch (err) {
     console.error("❌ Send receipt error:", err.response?.data || err.message);
     setMessage({ type: "error", text: "❌ Failed to send receipt" });
@@ -56,6 +69,7 @@ export default function HireReceipt() {
   // Clear message after 5 seconds
   setTimeout(() => setMessage({ type: "", text: "" }), 5000);
 };
+
 
   if (loading)
     return <p className="text-gray-600 text-center">Loading hire receipt...</p>;

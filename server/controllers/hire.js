@@ -124,72 +124,6 @@ router.post("/:hireId/complete", authMiddleware, async (req, res) => {
 
 // 🧾 Generate PDF Receipt
 // 🧾 Generate PDF Receipt (download)
-router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
-  try {
-    const { hireId } = req.params;
-    const userId = req.user.id;
-
-    const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
-    if (!hire) {
-      return res.status(404).json({ error: "Hire not found" });
-    }
-
-    // Create PDF
-    const doc = new PDFDocument({ margin: 40 });
-
-    // Set response headers
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=receipt-${hire._id}.pdf`
-    );
-
-    // Pipe directly to response
-    doc.pipe(res);
-
-    // 👉 PDF Content (same as email receipt for consistency)
-    doc.fontSize(22).text("Car Hire Receipt", { align: "center" });
-    doc.moveDown();
-
-    doc.fontSize(12).text(`Receipt No: ${hire._id}`);
-    doc.text(`Date: ${new Date(hire.createdAt).toLocaleString()}`);
-    doc.text(`Status: ${hire.status}`);
-    doc.moveDown();
-
-    doc.fontSize(16).text("Car Details", { underline: true });
-    hire.items.forEach(item => {
-      doc.moveDown(0.5);
-      doc.fontSize(12).text(`${item.carId.brand} ${item.carId.model} (${item.carId.year})`);
-      doc.text(
-        `Reg: ${item.carId.registrationNumber} | ${item.carId.transmission}, ${item.carId.fuelType} | ${item.carId.color}, ${item.carId.seats} Seats`
-      );
-      doc.text(
-        `Pickup: ${item.carId.pickupLocation} | Dropoff: ${item.carId.dropoffOptions?.[0] || "Not specified"}`
-      );
-      doc.text(`Price: Ksh ${item.totalPrice}`, { align: "right" });
-    });
-
-    doc.moveDown();
-    doc.fontSize(16).text("Payment Summary", { underline: true });
-    doc.fontSize(12).text(`Total Amount: Ksh ${hire.totalAmount}`);
-    doc.text(`Payment Method: ${hire.payment.method}`);
-    doc.text(`Payment Status: ${hire.payment.status}`);
-
-    doc.moveDown(2);
-    doc.fontSize(10).text("Thank you for choosing our service.", { align: "center" });
-    doc.fontSize(10).text("For inquiries, contact support@mycars.com", { align: "center" });
-
-    // Finalize
-    doc.end();
-
-  } catch (err) {
-    console.error("Receipt PDF error:", err);
-    res.status(500).json({ error: "Failed to generate receipt PDF" });
-  }
-});
-
-
-// 📧 Send receipt to email
 router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
   try {
     const { hireId } = req.params;
@@ -201,35 +135,41 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     const user = await User.findById(userId);
     if (!user || !user.email) return res.status(400).json({ error: "User email not found" });
 
-    // 👉 Generate PDF with PDFKit
+    // Collect PDF into buffer
     const doc = new PDFDocument({ margin: 40 });
-    let buffers = [];
+    const buffers = [];
+
     doc.on("data", buffers.push.bind(buffers));
     doc.on("end", async () => {
-      const pdfBuffer = Buffer.concat(buffers);
+      try {
+        const pdfBuffer = Buffer.concat(buffers);
 
-      // Send Email to user
-      await sendEmail(
-        user.email,
-        "Your Car Hire Receipt",
-        "Please find attached your receipt.",
-        [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
-      );
-
-      // Optional admin copy
-      if (process.env.ADMIN_EMAIL) {
+        // Send email to user
         await sendEmail(
-          process.env.ADMIN_EMAIL,
-          "New Hire Receipt (Copy)",
-          `Receipt for hire ${hire._id}`,
+          user.email,
+          "Your Car Hire Receipt",
+          "<p>Please find attached your receipt.</p>",
           [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
         );
-      }
 
-      res.json({ message: "Receipt sent successfully" });
+        // Send admin copy (optional)
+        if (process.env.ADMIN_EMAIL) {
+          await sendEmail(
+            process.env.ADMIN_EMAIL,
+            "New Hire Receipt (Copy)",
+            `<p>Receipt for hire <b>${hire._id}</b></p>`,
+            [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
+          );
+        }
+
+        res.json({ message: "Receipt sent successfully" });
+      } catch (emailErr) {
+        console.error("Email send error:", emailErr);
+        res.status(500).json({ error: "Failed to send email" });
+      }
     });
 
-    // 👉 PDF Content
+    // Build PDF content
     doc.fontSize(22).text("Car Hire Receipt", { align: "center" });
     doc.moveDown();
 
@@ -242,12 +182,9 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     hire.items.forEach(item => {
       doc.moveDown(0.5);
       doc.fontSize(12).text(`${item.carId.brand} ${item.carId.model} (${item.carId.year})`);
-      doc.text(
-        `Reg: ${item.carId.registrationNumber} | ${item.carId.transmission}, ${item.carId.fuelType} | ${item.carId.color}, ${item.carId.seats} Seats`
-      );
-      doc.text(
-        `Pickup: ${item.carId.pickupLocation} | Dropoff: ${item.carId.dropoffOptions?.[0] || "Not specified"}`
-      );
+      doc.text(`Reg: ${item.carId.registrationNumber} | ${item.carId.transmission}, ${item.carId.fuelType}`);
+      doc.text(`${item.carId.color}, ${item.carId.seats} Seats`);
+      doc.text(`Pickup: ${item.carId.pickupLocation} | Dropoff: ${item.carId.dropoffOptions?.[0] || "Not specified"}`);
       doc.text(`Price: Ksh ${item.totalPrice}`, { align: "right" });
     });
 
@@ -261,11 +198,13 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     doc.fontSize(10).text("Thank you for choosing our service.", { align: "center" });
     doc.fontSize(10).text("For inquiries, contact support@mycars.com", { align: "center" });
 
-    doc.end(); // Finalize PDF
+    doc.end(); // ✅ finalize
+
   } catch (err) {
     console.error("Send receipt error:", err);
     res.status(500).json({ error: err.message || "Failed to send receipt" });
   }
 });
+
 
 module.exports = router;
