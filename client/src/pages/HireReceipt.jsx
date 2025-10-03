@@ -9,7 +9,6 @@ export default function HireReceipt() {
   const [hire, setHire] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState({ type: "", text: "" }); // <-- success/error messages
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -36,40 +35,6 @@ export default function HireReceipt() {
   const handlePrint = () => {
     window.print();
   };
-
-  // Call backend to send receipt via email
-const handleSendEmail = async () => {
-  console.log("📨 Send email clicked");
-  try {
-    const res = await axios.post(
-      `${API_BASE_URL}/api/hire/${hireId}/send-receipt`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    console.log("✅ Send email response:", res.data);
-
-    // ✅ Show success message
-    setMessage({ type: "success", text: "📧 Receipt sent to your email and admin!" });
-
-    // ✅ Download the PDF locally
-    if (res.data.pdf) {
-      const link = document.createElement("a");
-      link.href = `data:application/pdf;base64,${res.data.pdf}`;
-      link.download = res.data.filename || "receipt.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  } catch (err) {
-    console.error("❌ Send receipt error:", err.response?.data || err.message);
-    setMessage({ type: "error", text: "❌ Failed to send receipt" });
-  }
-
-  // Clear message after 5 seconds
-  setTimeout(() => setMessage({ type: "", text: "" }), 5000);
-};
-
 
   if (loading)
     return <p className="text-gray-600 text-center">Loading hire receipt...</p>;
@@ -189,9 +154,7 @@ const handleSendEmail = async () => {
           ) : hire.payment.method === "mpesa" ? (
             hire.payment.status === "completed" ? (
               <div className="p-6 bg-green-50 rounded-lg text-green-800 border border-green-200 space-y-2">
-                <p className="text-xl font-semibold">
-                  ✅ Mpesa Payment Successful
-                </p>
+                <p className="text-xl font-semibold">✅ Mpesa Payment Successful</p>
                 <p className="text-sm">
                   Receipt No:{" "}
                   <span className="font-mono font-bold">
@@ -221,31 +184,12 @@ const handleSendEmail = async () => {
 
       {/* Action Buttons (hidden on print) */}
       <div className="flex flex-col items-center gap-4 mt-8 no-print">
-        <div className="flex gap-4">
-          <button
-            onClick={handlePrint}
-            className="px-6 py-3 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700"
-          >
-            🖨 Print
-          </button>
-          <button
-            onClick={handleSendEmail}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-500"
-          >
-            📧 Send to Email
-          </button>
-        </div>
-
-        {/* Success / Error messages */}
-        {message.text && (
-          <p
-            className={`mt-2 text-sm font-medium ${
-              message.type === "success" ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {message.text}
-          </p>
-        )}
+        <button
+          onClick={handlePrint}
+          className="px-6 py-3 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700"
+        >
+          🖨 Print
+        </button>
       </div>
     </div>
   );

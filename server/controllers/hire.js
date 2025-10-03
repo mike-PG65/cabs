@@ -4,12 +4,8 @@ const Hire = require("../models/Hire");
 const Car = require("../models/Cars");
 const authMiddleware = require("../middleware/auth");
 const { stkPush } = require("../services/mpesa");
-const { sendEmail } = require("../utils/sendEmail");
 const User = require("../models/User");
-const { buildHireReceiptPDF } = require("../utils/receiptPdf"); // ✅ helper
-const { Resend } = require("resend");
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+const { buildHireReceiptPDF } = require("../utils/receiptPdf");
 
 const router = express.Router();
 
@@ -42,11 +38,9 @@ router.post("", authMiddleware, async (req, res) => {
     await newHire.save();
     await Cart.findOneAndUpdate({ userId }, { items: [] });
 
-    // 🔑 Mark cars as hired
+    // Mark cars as booked
     for (let item of items) {
-      await Car.findByIdAndUpdate(item.carId, {
-        availabilityStatus: "Booked",
-      });
+      await Car.findByIdAndUpdate(item.carId, { availabilityStatus: "Booked" });
     }
 
     if (payment.method === "mpesa") {
@@ -59,9 +53,7 @@ router.post("", authMiddleware, async (req, res) => {
 
       const mpesaRes = await stkPush(totalAmount, phoneNumber, newHire._id);
       const checkoutId =
-        mpesaRes?.CheckoutRequestID ||
-        mpesaRes?.data?.CheckoutRequestID ||
-        null;
+        mpesaRes?.CheckoutRequestID || mpesaRes?.data?.CheckoutRequestID || null;
 
       if (checkoutId) {
         newHire.payment.transactionId = checkoutId;
@@ -91,13 +83,9 @@ router.get("/:hireId", authMiddleware, async (req, res) => {
     const { hireId } = req.params;
     const userId = req.user.id;
 
-    const hire = await Hire.findOne({ _id: hireId, userId }).populate(
-      "items.carId"
-    );
+    const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
 
-    if (!hire) {
-      return res.status(404).json({ error: "Hire not found" });
-    }
+    if (!hire) return res.status(404).json({ error: "Hire not found" });
 
     res.status(200).json({ hire });
   } catch (err) {
@@ -124,9 +112,7 @@ router.post("/:hireId/complete", authMiddleware, async (req, res) => {
   }
 });
 
-
-// 📄 Download receipt PDF directly
-// 📄 Download or preview receipt PDF
+// 📄 Download receipt PDF
 router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
   try {
     const { hireId } = req.params;
@@ -142,88 +128,21 @@ router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
       return res.json({
         message: "✅ Receipt generated",
         filename: `receipt-${hire._id}.pdf`,
-        pdf: pdfBuffer.toString("base64"), // frontend can decode & preview
+        pdf: pdfBuffer.toString("base64"),
       });
     }
 
-    // Default: send as downloadable file
+    // Default: send as downloadable PDF
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=receipt-${hire._id}.pdf`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt-${hire._id}.pdf`
+    );
     res.send(pdfBuffer);
-
   } catch (err) {
     console.error("Receipt PDF error:", err);
     res.status(500).json({ error: "Failed to generate receipt PDF" });
   }
 });
-
-
-// 📧 Send receipt via email (Resend)
-// 📧 Send receipt via email (Gmail + Nodemailer)
-// 📧 Send receipt via email (User + Admin)
-router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
-  try {
-    console.log("📨 /send-receipt endpoint hit"); // confirm route is running
-
-    const { hireId } = req.params;
-    const userId = req.user.id;
-
-    console.log("🔍 hireId:", hireId, "userId:", userId);
-
-    // 🔎 Fetch hire
-    const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
-    if (!hire) {
-      console.error("❌ Hire not found for:", hireId);
-      return res.status(404).json({ error: "Hire not found" });
-    }
-
-    // 🔎 Fetch user
-    const user = await User.findById(userId);
-    if (!user || !user.email) {
-      console.error("❌ No email found for user:", userId);
-      return res.status(400).json({ error: "User email not found" });
-    }
-
-    console.log("📧 Sending receipt to:", user.email);
-
-    // 📄 Build PDF buffer
-    const pdfBuffer = await buildHireReceiptPDF(hire);
-
-    // --- 1. Send email to user ---
-    await sendEmail(
-      user.email,
-      "Your Car Hire Receipt",
-      `<p>Hi ${user.name || "Customer"},</p>
-       <p>Thank you for hiring with <b>Jeffika Cabs</b>! Your receipt is attached.</p>`,
-      [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
-    );
-
-    console.log("✅ Receipt sent to user:", user.email);
-
-    // --- 2. Send admin copy ---
-    if (process.env.ADMIN_EMAIL) {
-      await sendEmail(
-        process.env.ADMIN_EMAIL,
-        `📑 New Hire Receipt (Hire ID: ${hire._id})`,
-        `<p>A new hire receipt was generated for <b>${user.email}</b>. The receipt is attached.</p>`,
-        [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
-      );
-      console.log("✅ Admin copy sent:", process.env.ADMIN_EMAIL);
-    } else {
-      console.warn("⚠️ ADMIN_EMAIL not set in environment");
-    }
-
-    res.json({
-      message: "📧 Receipt sent to user and admin",
-      filename: `receipt-${hire._id}.pdf`,
-    });
-
-  } catch (err) {
-    console.error("🔥 Send receipt error:", err);
-    res.status(500).json({ error: err.message || "Failed to send receipt" });
-  }
-});
-
-
 
 module.exports = router;
