@@ -160,21 +160,24 @@ router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
 
 // 📧 Send receipt via email (Resend)
 // 📧 Send receipt via email (Gmail + Nodemailer)
+// 📧 Send receipt via email (User + Admin)
 router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
   try {
-    console.log("📨 /send-receipt endpoint hit"); // ✅ confirm route is running
+    console.log("📨 /send-receipt endpoint hit"); // confirm route is running
 
     const { hireId } = req.params;
     const userId = req.user.id;
 
     console.log("🔍 hireId:", hireId, "userId:", userId);
 
+    // 🔎 Fetch hire
     const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
     if (!hire) {
       console.error("❌ Hire not found for:", hireId);
       return res.status(404).json({ error: "Hire not found" });
     }
 
+    // 🔎 Fetch user
     const user = await User.findById(userId);
     if (!user || !user.email) {
       console.error("❌ No email found for user:", userId);
@@ -183,21 +186,35 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
 
     console.log("📧 Sending receipt to:", user.email);
 
-    // Build PDF as buffer
+    // 📄 Build PDF buffer
     const pdfBuffer = await buildHireReceiptPDF(hire);
 
-    // ✅ Send email to user
-    const info = await sendEmail(
+    // --- 1. Send email to user ---
+    await sendEmail(
       user.email,
       "Your Car Hire Receipt",
-      "<p>Thank you for hiring with My Cars! Your receipt is attached.</p>",
+      `<p>Hi ${user.name || "Customer"},</p>
+       <p>Thank you for hiring with <b>Jeffika Cabs</b>! Your receipt is attached.</p>`,
       [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
     );
 
-    console.log("✅ Gmail response:", info);
+    console.log("✅ Receipt sent to user:", user.email);
+
+    // --- 2. Send admin copy ---
+    if (process.env.ADMIN_EMAIL) {
+      await sendEmail(
+        process.env.ADMIN_EMAIL,
+        `📑 New Hire Receipt (Hire ID: ${hire._id})`,
+        `<p>A new hire receipt was generated for <b>${user.email}</b>. The receipt is attached.</p>`,
+        [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
+      );
+      console.log("✅ Admin copy sent:", process.env.ADMIN_EMAIL);
+    } else {
+      console.warn("⚠️ ADMIN_EMAIL not set in environment");
+    }
 
     res.json({
-      message: "📧 Receipt sent successfully via Gmail",
+      message: "📧 Receipt sent to user and admin",
       filename: `receipt-${hire._id}.pdf`,
     });
 
@@ -206,6 +223,7 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message || "Failed to send receipt" });
   }
 });
+
 
 
 module.exports = router;
