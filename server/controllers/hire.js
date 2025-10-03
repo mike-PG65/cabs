@@ -7,7 +7,6 @@ const { stkPush } = require("../services/mpesa");
 const { sendEmail } = require("../utils/sendEmail");
 const User = require("../models/User");
 const { buildHireReceiptPDF } = require("../utils/receiptPdf"); // ✅ helper
-const authMiddleware = require("../middleware/auth");
 const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
