@@ -126,6 +126,7 @@ router.post("/:hireId/complete", authMiddleware, async (req, res) => {
 
 
 // 📄 Download receipt PDF directly
+// 📄 Download or preview receipt PDF
 router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
   try {
     const { hireId } = req.params;
@@ -136,14 +137,26 @@ router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
 
     const pdfBuffer = await buildHireReceiptPDF(hire);
 
+    // If frontend requests JSON (for preview)
+    if (req.query.format === "json") {
+      return res.json({
+        message: "✅ Receipt generated",
+        filename: `receipt-${hire._id}.pdf`,
+        pdf: pdfBuffer.toString("base64"), // frontend can decode & preview
+      });
+    }
+
+    // Default: send as downloadable file
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=receipt-${hire._id}.pdf`);
     res.send(pdfBuffer);
+
   } catch (err) {
     console.error("Receipt PDF error:", err);
     res.status(500).json({ error: "Failed to generate receipt PDF" });
   }
 });
+
 
 // 📧 Send receipt via email (Resend)
 router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
@@ -155,46 +168,33 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     if (!hire) return res.status(404).json({ error: "Hire not found" });
 
     const user = await User.findById(userId);
-    if (!user || !user.email) return res.status(400).json({ error: "User email not found" });
+    if (!user || !user.email) {
+      return res.status(400).json({ error: "User email not found" });
+    }
 
     // Build PDF as buffer
     const pdfBuffer = await buildHireReceiptPDF(hire);
 
-    // Send email to user
-    await resend.emails.send({
-      from: "My Cars <noreply@mycars.com>", // ✅ must match a verified domain in Resend
-      to: user.email,
-      subject: "Your Car Hire Receipt",
-      html: "<p>Please find attached your receipt.</p>",
-      attachments: [
-        {
-          filename: `receipt-${hire._id}.pdf`,
-          content: pdfBuffer.toString("base64"), // ✅ Resend requires base64
-          type: "application/pdf",
-        },
-      ],
-    });
+    // ✅ Send email to user
+    await sendEmail(
+      user.email,
+      "Your Car Hire Receipt",
+      "<p>Thank you for hiring with My Cars! Your receipt is attached.</p>",
+      [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
+    );
 
-    // Send admin copy (optional)
+    // ✅ Send admin copy (optional)
     if (process.env.ADMIN_EMAIL) {
-      await resend.emails.send({
-        from: "My Cars <noreply@mycars.com>",
-        to: process.env.ADMIN_EMAIL,
-        subject: `New Hire Receipt (Hire ID: ${hire._id})`,
-        html: `<p>Receipt for hire <b>${hire._id}</b> attached.</p>`,
-        attachments: [
-          {
-            filename: `receipt-${hire._id}.pdf`,
-            content: pdfBuffer.toString("base64"),
-            type: "application/pdf",
-          },
-        ],
-      });
+      await sendEmail(
+        process.env.ADMIN_EMAIL,
+        `New Hire Receipt (Hire ID: ${hire._id})`,
+        `<p>Receipt for hire <b>${hire._id}</b> attached.</p>`,
+        [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
+      );
     }
 
     res.json({
-      message: "📧 Receipt sent successfully",
-      pdf: pdfBuffer.toString("base64"), // frontend can offer download
+      message: "📧 Receipt sent successfully via Gmail",
       filename: `receipt-${hire._id}.pdf`,
     });
   } catch (err) {
