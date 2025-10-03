@@ -66,23 +66,7 @@ const CartPage = () => {
     <div className="p-4 sm:p-6 space-y-6 bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
 
-      {message.text && (
-        <div
-          className={`relative p-4 border rounded flex items-center justify-between ${message.type === "success"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-red-100 text-red-700 border-red-300"
-            }`}
-        >
-          <span>{message.text}</span>
-          <button
-            onClick={() => setMessage({ text: "", type: "" })}
-            className="ml-4 text-gray-600 hover:text-gray-800"
-            aria-label="Close"
-          >
-            <AiOutlineClose size={20} />
-          </button>
-        </div>
-      )}
+      
 
       {items.length === 0 && (
         <div className="p-4 bg-white rounded shadow text-center">
@@ -163,6 +147,25 @@ const CartPage = () => {
           </button>
         </div>
       )}
+
+      {message.text && (
+        <div
+          className={`relative p-4 border rounded flex items-center justify-between ${message.type === "success"
+              ? "bg-green-100 text-green-700 border-green-300"
+              : "bg-red-100 text-red-700 border-red-300"
+            }`}
+        >
+          <span>{message.text}</span>
+          <button
+            onClick={() => setMessage({ text: "", type: "" })}
+            className="ml-4 text-gray-600 hover:text-gray-800"
+            aria-label="Close"
+          >
+            <AiOutlineClose size={20} />
+          </button>
+        </div>
+      )}
+      
     </div>
   );
 };

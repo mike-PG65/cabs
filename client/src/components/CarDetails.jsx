@@ -13,14 +13,18 @@ const CarDetails = () => {
   const [error, setError] = useState(null);
 
   // ✅ local state for dismissible messages
-  const [showCartMessage, setShowCartMessage] = useState(true);
+  const [showCartMessage, setShowCartMessage] = useState(false);
 
-  const { items, error: cartError, loading: cartLoading } = useSelector(
-    (state) => state.cart
-  );
+  // cart slice state
+  const {
+    error: cartError,
+    loading: cartLoading,
+    message: cartMessage,
+  } = useSelector((state) => state.cart);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+  // Fetch car details
   useEffect(() => {
     const fetchCar = async () => {
       try {
@@ -39,12 +43,19 @@ const CarDetails = () => {
     fetchCar();
   }, [id]);
 
-  // reset messages whenever cart updates
+  // ✅ Show cart messages and auto-hide after 4s
   useEffect(() => {
-    if (cartLoading || cartError || items.length > 0) {
+    if (cartLoading || cartError || cartMessage) {
       setShowCartMessage(true);
+
+      // Auto dismiss after 4s
+      const timer = setTimeout(() => {
+        setShowCartMessage(false);
+      }, 4000);
+
+      return () => clearTimeout(timer); // cleanup timer
     }
-  }, [cartLoading, cartError, items]);
+  }, [cartLoading, cartError, cartMessage]);
 
   if (loading) return <div className="p-6">Loading car details...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
@@ -55,47 +66,6 @@ const CarDetails = () => {
       <h2 className="text-3xl font-bold text-gray-800 mb-4">
         {car.brand} {car.model} ({car.year})
       </h2>
-
-      {/* ✅ Cart messages with dismiss button */}
-      {cartLoading && showCartMessage && (
-        <div className="mb-4 p-3 rounded bg-blue-100 text-blue-700 flex justify-between items-center">
-          <span>Adding car to cart...</span>
-          <button
-            onClick={() => setShowCartMessage(false)}
-            className="ml-4 font-bold"
-          >
-            <IoClose/>
-          </button>
-        </div>
-      )}
-
-      {cartError && showCartMessage && (
-        <div className="mb-4 p-3 rounded bg-red-100 text-red-700 flex justify-between items-center">
-          <span>{cartError}</span>
-          <button
-            onClick={() => setShowCartMessage(false)}
-            className="ml-4 font-bold"
-          >
-            <IoClose/>
-          </button>
-        </div>
-      )}
-
-      {items.some((item) => item.car?._id === car._id) &&
-        !cartError &&
-        showCartMessage && (
-          <div className="mb-4 p-3 rounded bg-green-100 text-green-700 flex justify-between items-center">
-            <span>
-              {car.brand} {car.model} added to cart!
-            </span>
-            <button
-              onClick={() => setShowCartMessage(false)}
-              className="ml-4 font-bold"
-            >
-              ✖
-            </button>
-          </div>
-        )}
 
       {/* Car Image */}
       <div className="w-full max-w-3xl mb-6">
@@ -185,6 +155,25 @@ const CarDetails = () => {
       <div className="space-x-4 m-auto">
         <AddToCart car={car} />
       </div>
+
+      {/* ✅ Cart Messages with Auto Dismiss */}
+      {cartLoading && showCartMessage && (
+        <div className="mt-4 p-3 rounded bg-blue-100 text-blue-700 flex justify-between items-center">
+          <span>Adding car to cart...</span>
+        </div>
+      )}
+
+      {cartError && showCartMessage && (
+        <div className="mt-4 p-3 rounded bg-red-100 text-red-700 flex justify-between items-center">
+          <span>{cartError}</span>
+        </div>
+      )}
+
+      {cartMessage && !cartError && showCartMessage && (
+        <div className="mt-4 p-3 rounded bg-green-100 text-green-700 flex justify-between items-center">
+          <span>{cartMessage}</span>
+        </div>
+      )}
     </div>
   );
 };

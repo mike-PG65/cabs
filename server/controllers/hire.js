@@ -295,8 +295,10 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     res.json({ message: "Receipt sent successfully" });
 
   } catch (err) {
-    console.error("Send receipt error:", err);
-    res.status(500).json({ error: "Failed to send receipt" });
+    console.error("Send receipt error:", err.message);
+    res.status(500).json({
+    error: err.message || "Failed to send receipt",
+    details: err.stack || err });
   }
 });
 

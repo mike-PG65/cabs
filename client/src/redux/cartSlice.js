@@ -96,19 +96,27 @@ export const editCartDates = createAsyncThunk(
 
 const cartSlice = createSlice({
   name: "cart",
-  initialState: { items: [], loading: false, error: null },
-  reducers: {},
+  initialState: { items: [], loading: false, error: null, message: null },
+  reducers: {
+    clearMessage: (state) => { state.message = null; },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(addToCart.pending, state => { state.loading = true; })
+      .addCase(addToCart.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.message = null;
+      })
       .addCase(addToCart.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload.items || [];
-        state.error = null
+        state.message = action.payload.message || "Car added successfully"; // ✅
+        state.error = null;
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.message = null;
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.items = action.payload.items || [];
@@ -116,22 +124,20 @@ const cartSlice = createSlice({
       .addCase(editCartDates.fulfilled, (state, action) => {
         state.items = action.payload || [];
       })
-
-      // Remove from cart
-    .addCase(removeFromCart.fulfilled, (state, action) => {
-      state.items = action.payload.items || [];
-    })
-    .addCase(removeFromCart.rejected, (state, action) => {
-      state.error = action.payload;
-    })
-    // Clear cart
-    .addCase(clearCart.fulfilled, (state, action) => {
-      state.items = []; // just empty the items
-    })
-    .addCase(clearCart.rejected, (state, action) => {
-      state.error = action.payload;
-    })      
-  }
+      .addCase(removeFromCart.fulfilled, (state, action) => {
+        state.items = action.payload.items || [];
+      })
+      .addCase(removeFromCart.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(clearCart.fulfilled, (state) => {
+        state.items = [];
+      })
+      .addCase(clearCart.rejected, (state, action) => {
+        state.error = action.payload;
+      });
+  },
 });
 
+export const { clearMessage } = cartSlice.actions;
 export default cartSlice.reducer;
