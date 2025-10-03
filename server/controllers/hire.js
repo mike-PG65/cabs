@@ -5,7 +5,7 @@ const Car = require("../models/Cars"); // ✅ import Car model
 const authMiddleware = require("../middleware/auth");
 const { stkPush } = require("../services/mpesa");
 const { sendEmail } = require("../utils/sendEmail");
-const puppeteer = require("puppeteer");
+const PDFDocument = require("pdfkit");
 const User = require("../models/User");
 
 const router = express.Router();
@@ -200,105 +200,70 @@ router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
     const user = await User.findById(userId);
     if (!user || !user.email) return res.status(400).json({ error: "User email not found" });
 
-    // Build styled HTML
-    const html = `
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-            h1 { text-align: center; font-size: 28px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; }
-            th { background: #f4f4f4; text-align: left; }
-            .status { display: inline-block; padding: 5px 10px; border-radius: 10px; font-weight: bold; }
-            .confirmed { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
-            .pending { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #555; }
-          </style>
-        </head>
-        <body>
-          <h1>Car Hire Receipt</h1>
-          <p><b>Date:</b> ${new Date(hire.createdAt).toLocaleString()}</p>
-          <p><b>Hire ID:</b> ${hire._id}</p>
-          <p><b>Status:</b> 
-            <span class="status ${hire.status === 'confirmed' ? 'confirmed' : 'pending'}">
-              ${hire.status}
-            </span>
-          </p>
+    // 👉 Generate PDF with PDFKit
+    const doc = new PDFDocument({ margin: 40 });
+    let buffers = [];
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", async () => {
+      const pdfBuffer = Buffer.concat(buffers);
 
-          <h2>Car Details</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Car Info</th>
-                <th>Price (Ksh)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${hire.items.map(item => `
-                <tr>
-                  <td>
-                    <b>${item.carId.brand} ${item.carId.model} (${item.carId.year})</b><br/>
-                    Reg: ${item.carId.registrationNumber} | ${item.carId.transmission}, ${item.carId.fuelType} | ${item.carId.color}, ${item.carId.seats} Seats<br/>
-                    Pickup: ${item.carId.pickupLocation} | Dropoff: ${item.carId.dropoffOptions?.[0] || 'Not specified'}
-                  </td>
-                  <td style="text-align:right;">${item.totalPrice}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
-          <h2>Payment Summary</h2>
-          <p><b>Total Amount:</b> Ksh ${hire.totalAmount}</p>
-          <p><b>Payment Method:</b> ${hire.payment.method} (${hire.payment.status})</p>
-
-          <div class="footer">
-            Thank you for choosing our service.<br/>
-            For inquiries, contact support@mycars.com
-          </div>
-        </body>
-      </html>
-    `;
-
-    // Generate PDF
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
-    await browser.close();
-
-    // Send to user
-    await sendEmail(
-      user.email,
-      "Your Car Hire Receipt",
-      "Please find attached your receipt.",
-      [
-        { filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }
-      ]
-    );
-
-    // Optional admin copy
-    if (process.env.ADMIN_EMAIL) {
+      // Send Email to user
       await sendEmail(
-        process.env.ADMIN_EMAIL,
-        "New Hire Receipt (Copy)",
-        `Receipt for hire ${hire._id}`,
-        [
-          { filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }
-        ]
+        user.email,
+        "Your Car Hire Receipt",
+        "Please find attached your receipt.",
+        [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
       );
-    }
 
-    res.json({ message: "Receipt sent successfully" });
+      // Optional admin copy
+      if (process.env.ADMIN_EMAIL) {
+        await sendEmail(
+          process.env.ADMIN_EMAIL,
+          "New Hire Receipt (Copy)",
+          `Receipt for hire ${hire._id}`,
+          [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
+        );
+      }
 
+      res.json({ message: "Receipt sent successfully" });
+    });
+
+    // 👉 PDF Content
+    doc.fontSize(22).text("Car Hire Receipt", { align: "center" });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Receipt No: ${hire._id}`);
+    doc.text(`Date: ${new Date(hire.createdAt).toLocaleString()}`);
+    doc.text(`Status: ${hire.status}`);
+    doc.moveDown();
+
+    doc.fontSize(16).text("Car Details", { underline: true });
+    hire.items.forEach(item => {
+      doc.moveDown(0.5);
+      doc.fontSize(12).text(`${item.carId.brand} ${item.carId.model} (${item.carId.year})`);
+      doc.text(
+        `Reg: ${item.carId.registrationNumber} | ${item.carId.transmission}, ${item.carId.fuelType} | ${item.carId.color}, ${item.carId.seats} Seats`
+      );
+      doc.text(
+        `Pickup: ${item.carId.pickupLocation} | Dropoff: ${item.carId.dropoffOptions?.[0] || "Not specified"}`
+      );
+      doc.text(`Price: Ksh ${item.totalPrice}`, { align: "right" });
+    });
+
+    doc.moveDown();
+    doc.fontSize(16).text("Payment Summary", { underline: true });
+    doc.fontSize(12).text(`Total Amount: Ksh ${hire.totalAmount}`);
+    doc.text(`Payment Method: ${hire.payment.method}`);
+    doc.text(`Payment Status: ${hire.payment.status}`);
+
+    doc.moveDown(2);
+    doc.fontSize(10).text("Thank you for choosing our service.", { align: "center" });
+    doc.fontSize(10).text("For inquiries, contact support@mycars.com", { align: "center" });
+
+    doc.end(); // Finalize PDF
   } catch (err) {
-    console.error("Send receipt error:", err.message);
-    res.status(500).json({
-    error: err.message || "Failed to send receipt",
-    details: err.stack || err });
+    console.error("Send receipt error:", err);
+    res.status(500).json({ error: err.message || "Failed to send receipt" });
   }
 });
 
