@@ -159,48 +159,53 @@ router.get("/:hireId/receipt-pdf", authMiddleware, async (req, res) => {
 
 
 // 📧 Send receipt via email (Resend)
+// 📧 Send receipt via email (Gmail + Nodemailer)
 router.post("/:hireId/send-receipt", authMiddleware, async (req, res) => {
   try {
+    console.log("📨 /send-receipt endpoint hit"); // ✅ confirm route is running
+
     const { hireId } = req.params;
     const userId = req.user.id;
 
+    console.log("🔍 hireId:", hireId, "userId:", userId);
+
     const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
-    if (!hire) return res.status(404).json({ error: "Hire not found" });
+    if (!hire) {
+      console.error("❌ Hire not found for:", hireId);
+      return res.status(404).json({ error: "Hire not found" });
+    }
 
     const user = await User.findById(userId);
     if (!user || !user.email) {
+      console.error("❌ No email found for user:", userId);
       return res.status(400).json({ error: "User email not found" });
     }
+
+    console.log("📧 Sending receipt to:", user.email);
 
     // Build PDF as buffer
     const pdfBuffer = await buildHireReceiptPDF(hire);
 
     // ✅ Send email to user
-    await sendEmail(
+    const info = await sendEmail(
       user.email,
       "Your Car Hire Receipt",
       "<p>Thank you for hiring with My Cars! Your receipt is attached.</p>",
       [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
     );
 
-    // ✅ Send admin copy (optional)
-    if (process.env.ADMIN_EMAIL) {
-      await sendEmail(
-        process.env.ADMIN_EMAIL,
-        `New Hire Receipt (Hire ID: ${hire._id})`,
-        `<p>Receipt for hire <b>${hire._id}</b> attached.</p>`,
-        [{ filename: `receipt-${hire._id}.pdf`, content: pdfBuffer }]
-      );
-    }
+    console.log("✅ Gmail response:", info);
 
     res.json({
       message: "📧 Receipt sent successfully via Gmail",
       filename: `receipt-${hire._id}.pdf`,
     });
+
   } catch (err) {
-    console.error("Send receipt error:", err);
+    console.error("🔥 Send receipt error:", err);
     res.status(500).json({ error: err.message || "Failed to send receipt" });
   }
 });
+
 
 module.exports = router;
