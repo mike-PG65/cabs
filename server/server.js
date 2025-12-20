@@ -31,14 +31,6 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/hire', hireRoutes);
 app.use("/api/mpesa", mpesaRoutes);
 
-// ✅ Serve React frontend (client/dist)
-const __dirname1 = path.resolve(); // get project root
-app.use(express.static(path.join(__dirname1, "..", "client", "dist")));
-
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.resolve(__dirname1, "..", "client", "dist", "index.html"));
-});
-
 // Start server after DB connection
 const port = process.env.PORT || 4052;
 
