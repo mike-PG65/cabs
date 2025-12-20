@@ -83,7 +83,8 @@ router.get("/:hireId", authMiddleware, async (req, res) => {
     const { hireId } = req.params;
     const userId = req.user.id;
 
-    const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId");
+    const hire = await Hire.findOne({ _id: hireId, userId }).populate("items.carId").populate("userId", "name email phoneNumber");
+    console.log(hire.userId);
 
     if (!hire) return res.status(404).json({ error: "Hire not found" });
 

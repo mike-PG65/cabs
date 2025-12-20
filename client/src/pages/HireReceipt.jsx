@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import PrintableReceipt from "../components/printableReceipt"; // make sure path is correct
 
 export default function HireReceipt() {
   const { hireId } = useParams();
@@ -31,9 +32,27 @@ export default function HireReceipt() {
     if (hireId && token) fetchHire();
   }, [hireId, token]);
 
-  // Print only the receipt
+  // Print the separate printable receipt
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById("printable-receipt");
+    if (!printContent) return;
+
+    const WinPrint = window.open("", "", "width=900,height=650");
+    WinPrint.document.write(`
+      <html>
+        <head>
+          <title>Car Hire Receipt</title>
+          <style>
+            body { font-family: sans-serif; margin: 20px; }
+          </style>
+        </head>
+        <body>${printContent.innerHTML}</body>
+      </html>
+    `);
+    WinPrint.document.close();
+    WinPrint.focus();
+    WinPrint.print();
+    WinPrint.close();
   };
 
   if (loading)
@@ -42,28 +61,7 @@ export default function HireReceipt() {
 
   return (
     <div>
-      {/* Print-only CSS */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #receipt-content, #receipt-content * {
-            visibility: visible;
-          }
-          #receipt-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
-
-      {/* Receipt Content */}
+      {/* Your original receipt content */}
       <div
         id="receipt-content"
         className="p-12 max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200 space-y-10"
@@ -182,7 +180,12 @@ export default function HireReceipt() {
         </div>
       </div>
 
-      {/* Action Buttons (hidden on print) */}
+      {/* Hidden separate printable receipt */}
+      <div id="printable-receipt" style={{ display: "none" }}>
+        <PrintableReceipt hire={hire} />
+      </div>
+
+      {/* Action Buttons */}
       <div className="flex flex-col items-center gap-4 mt-8 no-print">
         <button
           onClick={handlePrint}
