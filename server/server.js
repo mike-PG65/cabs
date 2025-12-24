@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ["http://localhost:5173", "https://cabs-eight.vercel.app/"], // allow local + deployed frontend
+  origin: ["http://localhost:5173", "https://cabs-eight.vercel.app"], // allow local + deployed frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true, // if you use cookies
 }));
