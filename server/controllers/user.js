@@ -61,6 +61,8 @@ router.post('/login', async (req, res) => {
             { expiresIn: "1h" }
         );
 
+        console.log("JWT CREATED:", token);
+
         return res.json(
             {
                 token,
