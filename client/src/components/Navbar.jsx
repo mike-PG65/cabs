@@ -16,7 +16,7 @@ const Navbar = () => {
   const cartItems = useSelector((state) => state.cart?.items ?? []);
   const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
   const user = useSelector((state) => state.auth?.user);
-  console.log(user)
+  console.log("User:", user)
 
   useEffect(() => {
     const fetchCars = async () => {
