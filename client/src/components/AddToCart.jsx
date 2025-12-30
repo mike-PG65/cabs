@@ -20,7 +20,7 @@ const handleAdd = async () => {
       onClick={handleAdd}
       disabled={car.availabilityStatus !== "Available"}
       className={`flex-1 py-2 px-3 rounded-lg text-sm transition 
-        ${car.availabilityStatus === "available"
+        ${car.availabilityStatus === "Available"
           ? "bg-green-500 text-white hover:bg-green-600"
           : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
     >
