@@ -15,6 +15,7 @@ const Navbar = () => {
   // 🔹 Redux cart count
   const cartItems = useSelector((state) => state.cart?.items ?? []);
   const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
+  const user = useSelector((state) => state.auth?.user);
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -131,12 +132,22 @@ const Navbar = () => {
             </Link>
 
             {/* User */}
-            <Link to="/login">
-              <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600">
-                <User className="w-6 h-6" />
-                <span className="hidden sm:inline">Login</span>
-              </button>
-            </Link>
+            {user ? (
+              <div className="flex items-center space-x-2 text-gray-700">
+                <User className="w-6 h-6 text-blue-600" />
+                <span className="hidden sm:inline font-medium">
+                  Hi, {user.fullName}
+                </span>
+              </div>
+            ) : (
+              <Link to="/login">
+                <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600">
+                  <User className="w-6 h-6" />
+                  <span className="hidden sm:inline">Login</span>
+                </button>
+              </Link>
+            )}
+
 
             {/* Mobile menu icon */}
             <button
